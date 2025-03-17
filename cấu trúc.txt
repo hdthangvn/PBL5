@@ -1,0 +1,17 @@
+backend/
+│── app/
+│   │── main.py                 # Điểm vào chính của FastAPI
+│   │── config.py               # Cấu hình ứng dụng (DB, server, env)
+│   │── database.py             # Kết nối và thao tác với InfluxDB/SQLite
+│   │── models.py               # Định nghĩa các schema dữ liệu
+│   │── routes/
+│   │   │── sensor_routes.py    # Xử lý API REST (upload, lấy dữ liệu)
+│   │   │── websocket.py        # Xử lý WebSocket server nhận dữ liệu ESP8266
+│   │── services/
+│   │   │── sensor_service.py   # Xử lý logic nghiệp vụ (lưu dữ liệu, tính toán)
+│── tests/
+│   │── test_api.py             # Unit test cho API REST
+│   │── test_websocket.py       # Unit test WebSocket
+│── requirements.txt            # Danh sách thư viện cần thiết
+│── .env                        # Cấu hình biến môi trường (DB, secret key)
+│── README.md                   # Hướng dẫn cài đặt & chạy server

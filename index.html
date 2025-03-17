@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        #sensorData {
+            margin: 20px auto;
+            padding: 10px;
+            background-color: white;
+            border-radius: 8px;
+            width: 80%;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-item {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Sensor Data</h1>
+    <div id="sensorData">
+        <div class="data-item">Temperature: <span id="temperature">0</span>°C</div>
+        <div class="data-item">Air Pressure: <span id="airPressure">0</span> hPa</div>
+        <div class="data-item">Air Humidity: <span id="airHumidity">0</span>%</div>
+        <div class="data-item">Rainfall: <span id="rainfall">0</span> mm</div>
+        <div class="data-item">Soil Humidity: <span id="soilHumidity">0</span>%</div>
+        <div class="data-item">Water Level: <span id="waterLevel">0</span> cm</div>
+    </div>
+
+    <script>
+        let socket = null;
+        let isConnected = false;
+        let lastPingTime = Date.now();
+
+        function connectWebSocket() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                return;
+            }
+
+            socket = new WebSocket('ws://localhost:8080/ws');
+
+            socket.addEventListener('open', function (event) {
+                console.log("Connected to WebSocket server");
+                isConnected = true;
+                lastPingTime = Date.now();
+            });
+
+            socket.addEventListener('message', function (event) {
+                if (event.data === "ping") {
+                    lastPingTime = Date.now();
+                    return;
+                }
+
+                const data = event.data.split(';');
+                try {
+                    document.getElementById('temperature').textContent = parseFloat(data[0]).toFixed(2);
+                    document.getElementById('airPressure').textContent = parseFloat(data[1]).toFixed(2);
+                    document.getElementById('airHumidity').textContent = parseFloat(data[2]).toFixed(2);
+                    document.getElementById('rainfall').textContent = parseFloat(data[3]).toFixed(2);
+                    document.getElementById('soilHumidity').textContent = parseFloat(data[4]).toFixed(2);
+                    document.getElementById('waterLevel').textContent = parseFloat(data[5]).toFixed(2);
+                } catch (error) {
+                    console.error("Error updating values:", error);
+                }
+            });
+
+            socket.addEventListener('close', function (event) {
+                console.log("Connection closed. Reconnecting...");
+                isConnected = false;
+                setTimeout(connectWebSocket, 1000);
+            });
+
+            socket.addEventListener('error', function (event) {
+                console.error("WebSocket error:", event);
+            });
+        }
+
+        // Khởi tạo kết nối
+        connectWebSocket();
+
+        // Kiểm tra kết nối và ping timeout
+        setInterval(function () {
+            if (!isConnected) {
+                connectWebSocket();
+                return;
+            }
+
+            // Kiểm tra thời gian từ lần ping cuối
+            const timeSinceLastPing = Date.now() - lastPingTime;
+            if (timeSinceLastPing > 40000) { // 40 giây
+                console.log("Ping timeout, reconnecting...");
+                socket.close();
+                connectWebSocket();
+            }
+        }, 5000);
+    </script>
+</body>
+
+</html>
